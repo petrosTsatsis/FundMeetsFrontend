@@ -6,12 +6,10 @@ import { Button } from "@/components/ui/button";
 import Image from "next/image";
 import {
   NavigationMenu,
-  NavigationMenuContent,
   NavigationMenuIndicator,
   NavigationMenuItem,
   NavigationMenuLink,
   NavigationMenuList,
-  NavigationMenuTrigger,
   NavigationMenuViewport,
 } from "@/components/ui/navigation-menu";
 
@@ -69,8 +67,9 @@ export function NavigationBar() {
 
   return (
     <nav
-      className={`fixed top-0 left-0 w-full z-50 transition-all duration-500 bg-white border-b border-gray-200 shadow-lg text-black ${isScrolled ? "shadow-md" : ""
-        }`}
+      className={`fixed top-0 left-0 w-full z-50 transition-all duration-500 bg-white border-b border-gray-200 shadow-lg text-black ${
+        isScrolled ? "shadow-md" : ""
+      }`}
       style={{ height: "80px" }}
     >
       <div className="flex items-center justify-between h-full px-4 max-w-5xl mx-auto relative">
@@ -101,9 +100,7 @@ export function NavigationBar() {
                   className="group relative text-black hover:text-[var(--primary-900)] transition-colors cursor-pointer text-md px-2"
                   onClick={() => scrollToSection(item.href)}
                 >
-                  <span>
-                    {item.name}
-                  </span>
+                  <span>{item.name}</span>
                 </NavigationMenuLink>
               </NavigationMenuItem>
             ))}
@@ -121,11 +118,7 @@ export function NavigationBar() {
           >
             <Link href="/sign-in">Sign In</Link>
           </Button>
-          <Button
-            asChild
-            variant="default"
-            className="text-sm"
-          >
+          <Button asChild variant="default" className="text-sm">
             <Link href="/sign-up">Get Started</Link>
           </Button>
         </div>

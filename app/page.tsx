@@ -36,11 +36,7 @@ export default function Home() {
         <SectionDivider />
       </div>
       <ContactSection />
-
-
-
       <FooterSection />
     </main>
-
   );
 }
