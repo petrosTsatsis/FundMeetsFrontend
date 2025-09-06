@@ -56,7 +56,10 @@ export default function Dashboard() {
         setUserProfile(profile);
         setIsStartup(profile.role === "STARTUP");
       } catch (error) {
-        console.error("Error fetching user profile:", error);
+        // Only log errors in development
+        if (process.env.NODE_ENV === 'development') {
+          console.error("Error fetching user profile:", error);
+        }
         router.push("/select-role");
       } finally {
         setIsLoading(false);
@@ -98,17 +101,17 @@ export default function Dashboard() {
     <Suspense fallback={null}>
       <SidebarProvider>
         <UserProfileProvider initialProfile={userProfile}>
-          <div className="flex h-screen">
-            <AppSidebar
-              onSectionChange={setCurrentSection}
-              currentSection={currentSection}
-            />
-            <DashboardContent
-              currentSection={currentSection}
-              isStartup={isStartup}
-              userProfile={userProfile}
-            />
-          </div>
+          {/* <div className="flex h-screen"> */}
+          <AppSidebar
+            onSectionChange={setCurrentSection}
+            currentSection={currentSection}
+          />
+          <DashboardContent
+            currentSection={currentSection}
+            isStartup={isStartup}
+            userProfile={userProfile}
+          />
+          {/* </div> */}
         </UserProfileProvider>
       </SidebarProvider>
     </Suspense>
