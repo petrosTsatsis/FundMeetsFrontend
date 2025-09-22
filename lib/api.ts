@@ -259,6 +259,84 @@ export interface AppMetrics {
 // Enums
 export type Role = "STARTUP" | "INVESTOR" | "ADMIN";
 
+// Export canonical option arrays for UI selections
+export const INDUSTRY_OPTIONS: Industry[] = [
+    "FINTECH",
+    "HEALTHTECH",
+    "EDTECH",
+    "AGRITECH",
+    "GREENTECH",
+    "AI",
+    "BIOTECH",
+    "SAAS",
+    "MARKETPLACE",
+    "ECOMMERCE",
+    "PROPTECH",
+    "INSURTECH",
+    "MOBILITY",
+    "LOGISTICS",
+    "GAMING",
+    "MARTECH",
+    "CYBERSECURITY",
+    "BLOCKCHAIN",
+    "IOT",
+    "HRTECH",
+    "TRAVELTECH",
+    "CONSUMER_TECH",
+    "LEGALTECH",
+    "SOCIAL_IMPACT",
+    "GOVTECH",
+    "MEDIA",
+    "OTHER",
+];
+
+export const STARTUP_STAGE_OPTIONS: StartupStage[] = [
+    "IDEA",
+    "PRE_SEED",
+    "SEED",
+    "SERIES_A",
+    "SERIES_B",
+    "SERIES_C",
+    "GROWTH",
+    "IPO",
+    "GRANT",
+    "ACQUISITION",
+    "NOT_SEEKING",
+];
+
+export const BUSINESS_MODEL_OPTIONS: BusinessModel[] = [
+    "SAAS",
+    "MARKETPLACE",
+    "ECOMMERCE",
+    "SUBSCRIPTION",
+    "TRANSACTIONAL",
+    "FREEMIUM",
+    "ADVERTISING",
+    "LICENSING",
+    "HARDWARE",
+    "SERVICES",
+    "FRANCHISE",
+    "OPEN_SOURCE",
+    "DONATION",
+    "HYBRID",
+];
+
+export const INVESTOR_TYPE_OPTIONS: InvestorType[] = [
+    "ANGEL_INVESTOR",
+    "VENTURE_CAPITAL",
+    "MICRO_VC",
+    "CORPORATE_VC",
+    "FAMILY_OFFICE",
+    "PRIVATE_EQUITY",
+    "HEDGE_FUND",
+    "SOVEREIGN_WEALTH",
+    "ACCELERATOR",
+    "CROWDFUNDING",
+    "PENSION_FUND",
+    "IMPACT_INVESTOR",
+    "UNIVERSITY_ENDOWMENT",
+];
+
 export type InterestStatus = "PENDING" | "ACCEPTED" | "REJECTED" | "WITHDRAWN";
 
 export type StartupStage =
@@ -883,15 +961,26 @@ export class ApiClient {
     }
 
     // User endpoints
-    async syncUserRecord(role: string): Promise<void> {
+    async syncBareUser(): Promise<void> {
         const response = await fetch(`${this.baseUrl}/auth/user/sync`, {
             method: "POST",
             headers: this.getHeaders(),
-            body: JSON.stringify({role}),
         });
         if (!response.ok) {
-            throw new Error(`Failed to sync user record: ${response.statusText}`);
+            throw new Error(`Failed to sync bare user: ${response.statusText}`);
         }
+    }
+
+    async completeOnboarding(data: { role: string } & any): Promise<any> {
+        const response = await fetch(`${this.baseUrl}/auth/user/onboarding`, {
+            method: "POST",
+            headers: this.getHeaders(),
+            body: JSON.stringify(data),
+        });
+        if (!response.ok) {
+            throw new Error(`Failed to complete onboarding: ${response.statusText}`);
+        }
+        return response.json();
     }
 
     async getUserProfile(userId: string): Promise<UserData> {

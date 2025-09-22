@@ -60,7 +60,7 @@ export default function Dashboard() {
         if (process.env.NODE_ENV === 'development') {
           console.error("Error fetching user profile:", error);
         }
-        router.push("/select-role");
+        router.push("/");
       } finally {
         setIsLoading(false);
       }

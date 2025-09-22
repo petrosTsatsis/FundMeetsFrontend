@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useRef, useState } from "react";
-import { useSignUp, useClerk } from "@clerk/nextjs";
+import { useSignUp, useClerk, useAuth } from "@clerk/nextjs";
 import { useRouter } from "next/navigation";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -14,7 +14,7 @@ import {
   InputOTPGroup,
   InputOTPSeparator,
   InputOTPSlot,
-} from "@/components/ui/input-otp"
+} from "@/components/ui/input-otp";
 
 // Define the form schema with Zod
 const formSchema = z
@@ -26,7 +26,10 @@ const formSchema = z
       .regex(/[A-Z]/, "Password must contain at least one uppercase letter")
       .regex(/[a-z]/, "Password must contain at least one lowercase letter")
       .regex(/[0-9]/, "Password must contain at least one number")
-      .regex(/[^A-Za-z0-9]/, "Password must contain at least one special character"),
+      .regex(
+        /[^A-Za-z0-9]/,
+        "Password must contain at least one special character"
+      ),
     confirmPassword: z.string(),
   })
   .refine((data) => data.password === data.confirmPassword, {
@@ -50,7 +53,6 @@ export default function CustomSignUpForm() {
     register,
     handleSubmit,
     formState: { errors },
-    setValue,
   } = useForm<FormData>({
     resolver: zodResolver(formSchema),
   });
@@ -76,7 +78,7 @@ export default function CustomSignUpForm() {
 
       if (result.status === "complete") {
         await setActive({ session: result.createdSessionId });
-        router.push("/select-role");
+        router.push("/onboarding");
       } else {
         await signUp.prepareEmailAddressVerification({
           strategy: "email_code",
@@ -85,7 +87,9 @@ export default function CustomSignUpForm() {
       }
     } catch (err: any) {
       if (err.errors?.[0]?.code === "form_identifier_exists") {
-        toast.error("An account with this email already exists. Redirecting to sign in...");
+        toast.error(
+          "An account with this email already exists. Redirecting to sign in..."
+        );
         setTimeout(() => {
           router.push("/sign-in");
         }, 2000);
@@ -111,7 +115,7 @@ export default function CustomSignUpForm() {
       const completeSignUp = await signUp.attemptEmailAddressVerification({ code: otp });
       if (completeSignUp.status !== "complete") throw new Error("Verification failed");
       if (setActive) await setActive({ session: completeSignUp.createdSessionId });
-      router.push("/select-role");
+      router.push("/onboarding");
     } catch (err) {
       toast.error("Verification failed. Please try again.");
       console.error("Error during verification:", err);
@@ -133,7 +137,7 @@ export default function CustomSignUpForm() {
       await signUp.authenticateWithRedirect({
         strategy: "oauth_google",
         redirectUrl: `${window.location.origin}/sso-callback`,
-        redirectUrlComplete: `${window.location.origin}/select-role`,
+        redirectUrlComplete: `${window.location.origin}/onboarding`,
       });
     } catch (err) {
       toast.error("An error occurred during Google sign up. Please try again.");

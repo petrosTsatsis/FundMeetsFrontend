@@ -8,7 +8,7 @@ const STATIC_CACHE_URLS = [
   '/dashboard',
   '/sign-in',
   '/sign-up',
-  '/select-role',
+  '/onboarding',
   '/offline.html'
 ];
 
