@@ -36,26 +36,22 @@ export function useRecommendedStartups() {
     });
 }
 
-export function useAllStartups() {
+// Fetch recommended investors from the API with cashing and retrying and better performance
+export function useRecommendedInvestors() {
     const api = useApi();
 
     return useQuery({
-        queryKey: ["all-startups"],
-        queryFn: () => api?.getAllStartups() ?? Promise.reject("API not available"),
+        queryKey: ["recommended-investors"],
+        queryFn: () => api?.getRecommendedInvestors() ?? Promise.reject("API not available"),
         enabled: !!api,
-        staleTime: 5 * 60 * 1000, // 5 minutes
-        gcTime: 15 * 60 * 1000, // 15 minutes
-    });
-}
-
-export function useAllInvestors() {
-    const api = useApi();
-
-    return useQuery({
-        queryKey: ["all-investors"],
-        queryFn: () => api?.getAllInvestors() ?? Promise.reject("API not available"),
-        enabled: !!api,
-        staleTime: 5 * 60 * 1000, // 5 minutes
-        gcTime: 15 * 60 * 1000, // 15 minutes
+        staleTime: 3 * 60 * 1000, // 3 minutes
+        gcTime: 10 * 60 * 1000, // 10 minutes
+        retry: (failureCount, error: any) => {
+            // Don't retry on 400 errors (user needs investor profile)
+            if (error?.response?.status === 400) {
+                return false;
+            }
+            return failureCount < 2;
+        },
     });
 }

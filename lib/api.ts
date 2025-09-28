@@ -569,6 +569,21 @@ export class ApiClient {
         return response.json();
     }
 
+    async getRecommendedInvestors(): Promise<InvestorProfile[]> {
+        try {
+            return await this.requestWithCache('/startups/recommended-investors', {}, 3 * 60 * 1000); // 3 min cache
+        } catch (error: any) {
+            // Preserve the original error handling logic
+            if (error.response?.status === 400) {
+                const errorMessage = "You need to have a startup profile to see recommended investors. Please complete your startup profile first.";
+                const newError: any = new Error(errorMessage);
+                newError.response = error.response;
+                throw newError;
+            }
+            throw error;
+        }
+    }
+
     async createStartup(data: Partial<StartupProfile>): Promise<StartupProfile> {
         const response = await fetch(`${this.baseUrl}/startups`, {
             method: "POST",
