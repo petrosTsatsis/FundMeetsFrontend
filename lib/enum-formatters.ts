@@ -2,7 +2,7 @@
 
 // Mapping functions for enum display formatting
 export function formatIndustry(industry: string | undefined | null): string {
-    if (!industry) return "N/A";
+    if (!industry) return "-";
 
     const industryMap: Record<string, string> = {
         FINTECH: "Fintech",
@@ -39,7 +39,7 @@ export function formatIndustry(industry: string | undefined | null): string {
 
 // format a Startup stage
 export function formatStage(stage: string | undefined | null): string {
-    if (!stage) return "N/A";
+    if (!stage) return "-";
 
     const stageMap: Record<string, string> = {
         IDEA: "Idea",
@@ -62,7 +62,7 @@ export function formatStage(stage: string | undefined | null): string {
 export function formatInvestorType(
     investorType: string | undefined | null
 ): string {
-    if (!investorType) return "N/A";
+    if (!investorType) return "-";
 
     const investorTypeMap: Record<string, string> = {
         ANGEL_INVESTOR: "Angel Investor",
@@ -87,7 +87,7 @@ export function formatInvestorType(
 export function formatBusinessModel(
     businessModel: string | undefined | null
 ): string {
-    if (!businessModel) return "N/A";
+    if (!businessModel) return "-";
 
     const businessModelMap: Record<string, string> = {
         SAAS: "SaaS",

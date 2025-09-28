@@ -37,102 +37,14 @@ import {
     TooltipProvider,
     TooltipTrigger,
 } from "@/components/ui/tooltip";
-import {TopInvestorsTable, type TopInvestorData} from "./top-investors-table";
-import {useDashboardMetrics, useRecommendedInvestors} from "@/lib/hooks/use-dashboard-data";
+import {TopInvestorsTable} from "./top-investors-table";
+import {useDashboardMetrics, useRecommendedInvestors, useTopInvestors} from "@/lib/hooks/use-dashboard-data";
 import {useCallback, useMemo} from "react";
 import {
     formatInvestorType,
     formatCurrency
 } from "@/lib/enum-formatters";
-
-// Top Investors Data
-const topInvestorsData = [
-    {
-        id: "1",
-        name: "Sarah Chen",
-        company: "TechVentures Capital",
-        title: "Partner",
-        location: "San Francisco, CA",
-        avatar: "/avatars/investor1.jpg",
-        verified: true,
-        type: "Venture Capital",
-        focusAreas: ["SaaS", "AI", "B2B"],
-        portfolioSize: 45,
-        averageCheck: 5000000,
-        lastActive: "2 hours ago",
-        totalInvested: 250000000,
-        successfulDeals: 38,
-        successRate: 84,
-    },
-    {
-        id: "2",
-        name: "Dr. Elena Rodriguez",
-        company: "HealthTech Partners",
-        title: "Principal",
-        location: "Boston, MA",
-        avatar: "/avatars/investor3.jpg",
-        verified: true,
-        type: "Venture Capital",
-        focusAreas: ["HealthTech", "MedTech", "AI"],
-        portfolioSize: 28,
-        averageCheck: 7500000,
-        lastActive: "3 hours ago",
-        totalInvested: 180000000,
-        successfulDeals: 22,
-        successRate: 79,
-    },
-    {
-        id: "3",
-        name: "David Kim",
-        company: "FinTech Capital",
-        title: "Investment Director",
-        location: "New York, NY",
-        avatar: "/avatars/investor4.jpg",
-        verified: true,
-        type: "Private Equity",
-        focusAreas: ["FinTech", "Blockchain", "Payments"],
-        portfolioSize: 38,
-        averageCheck: 4000000,
-        lastActive: "2 days ago",
-        totalInvested: 120000000,
-        successfulDeals: 28,
-        successRate: 74,
-    },
-    {
-        id: "4",
-        name: "Marcus Johnson",
-        company: "GreenTech Ventures",
-        title: "Managing Director",
-        location: "Austin, TX",
-        avatar: "/avatars/investor2.jpg",
-        verified: true,
-        type: "Angel Investor",
-        focusAreas: ["CleanTech", "Hardware", "B2C"],
-        portfolioSize: 32,
-        averageCheck: 2500000,
-        lastActive: "1 day ago",
-        totalInvested: 95000000,
-        successfulDeals: 24,
-        successRate: 75,
-    },
-    {
-        id: "5",
-        name: "Lisa Wang",
-        company: "EduTech Ventures",
-        title: "Partner",
-        location: "Seattle, WA",
-        avatar: "/avatars/investor5.jpg",
-        verified: false,
-        type: "Angel Investor",
-        focusAreas: ["EdTech", "Learning", "B2B"],
-        portfolioSize: 22,
-        averageCheck: 1800000,
-        lastActive: "1 week ago",
-        totalInvested: 65000000,
-        successfulDeals: 16,
-        successRate: 73,
-    },
-];
+import {TopInvestorData} from "@/lib/api";
 
 // New Investors Data
 const newInvestorsData = [
@@ -259,6 +171,12 @@ export function StartupDashboardOverview() {
         isLoading: investorsLoading,
         error: investorsError
     } = useRecommendedInvestors();
+
+    const {
+        data: topInvestors = [],
+        isLoading: topInvestorsLoading,
+        error: topInvestorsError
+    } = useTopInvestors();
 
     // Memoized calculations to prevent unnecessary re-renders
     const nf = useMemo(() => new Intl.NumberFormat(), []);
@@ -723,7 +641,7 @@ export function StartupDashboardOverview() {
                         </div>
                     </div>
 
-                    <TopInvestorsTable data={topInvestorsData as TopInvestorData[]}/>
+                    <TopInvestorsTable data={topInvestors as TopInvestorData[]}/>
                 </div>
             </div>
 

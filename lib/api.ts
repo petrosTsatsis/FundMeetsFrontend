@@ -256,6 +256,24 @@ export interface AppMetrics {
     };
 }
 
+// Top Investor Type for frontend table
+export interface TopInvestorData {
+    id: string;
+    name: string;
+    profilePicture?: string;
+    currentPosition?: string;
+    investorType: InvestorType; // maps from investorType
+    title?: string; // maps from currentPosition
+    location?: string;
+    averageCheck?: number; // derived from checkSizeMin/checkSizeMax
+    preferredStage?: StartupStage[];
+    preferredIndustry?: Industry[];
+    dealsClosed?: number;
+    verified: boolean;
+    matchesCount?: number; // maps from _count.matches
+}
+
+
 // Enums
 export type Role = "STARTUP" | "INVESTOR" | "ADMIN";
 
@@ -649,6 +667,16 @@ export class ApiClient {
         });
         if (!response.ok) {
             throw new Error(`Failed to fetch investors: ${response.statusText}`);
+        }
+        return response.json();
+    }
+
+    async getTopInvestors(): Promise<TopInvestorData[]> {
+        const response = await fetch(`${this.baseUrl}/common/top-investors`, {
+            headers: this.getHeaders(),
+        });
+        if (!response.ok) {
+            throw new Error(`Failed to fetch top investors: ${response.statusText}`);
         }
         return response.json();
     }

@@ -55,3 +55,15 @@ export function useRecommendedInvestors() {
         },
     });
 }
+
+export function useTopInvestors() {
+    const api = useApi();
+
+    return useQuery({
+        queryKey: ["top-investors"],
+        queryFn: () => api?.getTopInvestors() ?? Promise.reject("API not available"),
+        enabled: !!api,
+        staleTime: 5 * 60 * 1000, // 5 minutes
+        gcTime: 15 * 60 * 1000, // 15 minutes
+    });
+}
