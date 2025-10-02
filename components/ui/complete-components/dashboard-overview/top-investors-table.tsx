@@ -190,9 +190,7 @@ const columns: ColumnDef<TopInvestorData>[] = [
                     <DropdownMenuContent align="end" className="w-32">
                         <DropdownMenuItem>View Profile</DropdownMenuItem>
                         <DropdownMenuItem>Connect</DropdownMenuItem>
-                        <DropdownMenuItem>Save</DropdownMenuItem>
-                        <DropdownMenuSeparator/>
-                        <DropdownMenuItem>Report</DropdownMenuItem>
+                        <DropdownMenuItem>Save Profile</DropdownMenuItem>
                     </DropdownMenuContent>
                 </DropdownMenu>
             </div>
