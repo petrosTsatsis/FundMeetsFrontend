@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useRef, useState } from "react";
+import React, { useRef, useState, useEffect } from "react";
 import { useSignUp, useClerk, useAuth } from "@clerk/nextjs";
 import { useRouter } from "next/navigation";
 import { useForm } from "react-hook-form";
@@ -48,6 +48,8 @@ export default function CustomSignUpForm() {
   const [code, setCode] = useState("");
   const [formData, setFormData] = useState<FormData | null>(null);
   const [oauthLoading, setOAuthLoading] = useState(false);
+  const [resendTimer, setResendTimer] = useState(30);
+  const [isResending, setIsResending] = useState(false);
 
   const {
     register,
@@ -58,6 +60,21 @@ export default function CustomSignUpForm() {
   });
 
   const captchaRef = useRef<HTMLDivElement | null>(null);
+
+  // Reset and run countdown for resend code when in verifying state
+  useEffect(() => {
+    if (verifying) {
+      setResendTimer(30);
+    }
+  }, [verifying]);
+
+  useEffect(() => {
+    if (!verifying || resendTimer <= 0) return;
+    const interval = setInterval(() => {
+      setResendTimer((t) => (t > 0 ? t - 1 : 0));
+    }, 1000);
+    return () => clearInterval(interval);
+  }, [verifying, resendTimer]);
 
   const onSubmit = async (data: FormData) => {
     if (!isLoaded) return;
@@ -121,6 +138,25 @@ export default function CustomSignUpForm() {
       console.error("Error during verification:", err);
     } finally {
       setIsLoading(false);
+    }
+  };
+
+  const handleResendCode = async () => {
+    if (!isLoaded || !signUp) {
+      toast.error("Unable to resend right now. Please try again shortly.");
+      return;
+    }
+    try {
+      setIsResending(true);
+      await signUp.prepareEmailAddressVerification({ strategy: "email_code" });
+      setResendTimer(30);
+      toast.success("Verification code resent. Check your inbox.");
+    } catch (err: any) {
+      console.error("Error resending verification code:", err);
+      const message = err?.errors?.[0]?.message || "Couldn't resend the code. Please wait and try again.";
+      toast.error(message);
+    } finally {
+      setIsResending(false);
     }
   };
 
@@ -211,6 +247,18 @@ export default function CustomSignUpForm() {
               >
                 {isLoading ? "Verifying..." : "Verify Email"}
               </Button>
+              <div className="w-full mt-4 flex flex-col items-center gap-2">
+                <p className="text-sm text-gray-700">Did not get the code?</p>
+                <button
+                  type="button"
+                  onClick={handleResendCode}
+                  disabled={isResending || resendTimer > 0}
+                  aria-disabled={isResending || resendTimer > 0}
+                  className={`px-4 py-2 rounded-md border border-[var(--primary-700)]/20 text-[var(--primary-700)] transition-all duration-300 hover:bg-[var(--primary-700)]/5 disabled:opacity-50 disabled:cursor-not-allowed`}
+                >
+                  {isResending ? "Resending..." : resendTimer > 0 ? `Resend in ${resendTimer}s` : "Resend code"}
+                </button>
+              </div>
             </form>
           </div>
         </motion.div>

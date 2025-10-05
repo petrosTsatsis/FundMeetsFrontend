@@ -1,6 +1,6 @@
 "use client";
 
-import {useState, useEffect} from "react";
+import {useState, useEffect, useRef} from "react";
 import {useAuth} from "@clerk/nextjs";
 import {useRouter} from "next/navigation";
 import {toast} from "sonner";
@@ -74,6 +74,7 @@ function MultiSelect({
     onChange: (values: string[]) => void;
     placeholder?: string;
 }) {
+    const [open, setOpen] = useState(false);
     const toggle = (value: string) => {
         const exists = selected.includes(value);
         onChange(
@@ -88,7 +89,7 @@ function MultiSelect({
     return (
         <div className="flex flex-col gap-2">
             <Label>{label}</Label>
-            <DropdownMenu>
+            <DropdownMenu open={open} onOpenChange={setOpen}>
                 <DropdownMenuTrigger asChild>
                     <Button variant="outline" className="justify-between">
                         {display}
@@ -100,11 +101,18 @@ function MultiSelect({
                         <DropdownMenuCheckboxItem
                             key={opt}
                             checked={selected.includes(opt)}
+                            // prevent Radix from closing the menu on select
+                            onSelect={(e) => e.preventDefault()}
                             onCheckedChange={() => toggle(opt)}
                         >
                             {opt}
                         </DropdownMenuCheckboxItem>
                     ))}
+                    <div className="p-2 border-t mt-1">
+                        <Button type="button" variant="secondary" className="w-full" onClick={() => setOpen(false)}>
+                            Done
+                        </Button>
+                    </div>
                 </DropdownMenuContent>
             </DropdownMenu>
         </div>
@@ -124,7 +132,7 @@ export default function OnboardingFlow() {
     const [isLoading, setIsLoading] = useState(false);
     const router = useRouter();
     const api = useApi();
-    const {getToken} = useAuth();
+    const {getToken, userId} = useAuth();
     const [formData, setFormData] = useState({
         name: "",
         website: "",
@@ -141,12 +149,19 @@ export default function OnboardingFlow() {
         investorType: "",
         currentPosition: "",
         checkSizeRange: [0, 0] as number[],
+        checkSizeUnlimited: false,
         preferredStage: [] as string[],
         preferredIndustry: [] as string[],
         preferredBusinessModels: [] as string[],
         geographyFocus: [] as string[],
         geographyInput: "",
     });
+    // 'Other' custom inputs (UI-only)
+    const [startupIndustryOther, setStartupIndustryOther] = useState("");
+    const [startupBusinessOther, setStartupBusinessOther] = useState("");
+    const [investorStageOther, setInvestorStageOther] = useState("");
+    const [investorIndustryOther, setInvestorIndustryOther] = useState("");
+    const [investorBusinessOther, setInvestorBusinessOther] = useState("");
     const [selectedRole, setSelectedRole] = useState<"STARTUP" | "INVESTOR" | "">(
         ""
     );
@@ -172,25 +187,40 @@ export default function OnboardingFlow() {
     const stepTransition = {duration: 0.35, ease: "easeOut" as const};
 
     useEffect(() => {
-        const syncUser = async () => {
+        const run = async () => {
             try {
-                const token = await getToken({template: "FundMeets"});
+                if (!userId) return;
+                const key = `fm_synced_bare_user_${userId}`;
+                if (typeof window !== "undefined" && sessionStorage.getItem(key)) {
+                    return;
+                }
+                if (typeof window !== "undefined") {
+                    sessionStorage.setItem(key, "1");
+                }
+
+                const token = await getToken({ template: "FundMeets" });
                 if (!token) {
                     console.warn("No Clerk token found, skipping sync.");
+                    if (typeof window !== "undefined") {
+                        sessionStorage.removeItem(key);
+                    }
                     return;
                 }
 
                 const api = new ApiClient();
                 api.setToken(token);
-
                 await api.syncBareUser();
             } catch (err) {
                 console.error("Failed to sync user:", err);
+                if (typeof window !== "undefined" && userId) {
+                    const key = `fm_synced_bare_user_${userId}`;
+                    sessionStorage.removeItem(key);
+                }
             }
         };
 
-        syncUser();
-    }, [getToken]);
+        run();
+    }, [getToken, userId]);
 
     const handleNext = async () => {
         if (currentStep < 4) {
@@ -241,8 +271,7 @@ export default function OnboardingFlow() {
                             : 0,
                         preferredStage: investorData.preferredStage || undefined,
                         preferredIndustry: investorData.preferredIndustry || undefined,
-                        preferredBusinessModels:
-                            investorData.preferredBusinessModels || undefined,
+                        preferredBusinessModels: investorData.preferredBusinessModels || undefined,
                         geographyFocus: investorData.geographyFocus || undefined,
                     };
                     await api?.completeOnboarding(payload);
@@ -552,17 +581,21 @@ export default function OnboardingFlow() {
                             <div className="space-y-4">
                                 <div className="space-y-3">
                                     <div className="flex items-center justify-between">
-                                        <Label>Check Size Range (optional)</Label>
-                                        <div
-                                            className="text-xs text-muted-foreground">{`€${(investorData.checkSizeRange[0] || 0).toLocaleString()} - €${(investorData.checkSizeRange[1] || 0).toLocaleString()}`}</div>
+                                        <div className="flex items-center gap-3">
+                                            <Label>Check Size Range (optional)</Label>
+                                        </div>
+                                        <div className="text-xs text-muted-foreground">{`€${(investorData.checkSizeRange[0] || 0).toLocaleString()} - €${(investorData.checkSizeRange[1] || 0).toLocaleString()}`}</div>
                                     </div>
                                     <div className="px-1">
                                         <Slider
                                             min={0}
-                                            max={1000000}
+                                            max={Math.max(1000000, investorData.checkSizeRange[1] || 0)}
                                             defaultValue={[0, 0]}
                                             value={investorData.checkSizeRange as any}
-                                            onValueChange={(vals) => updateInvestor("checkSizeRange", vals)}
+                                            onValueChange={(vals) => {
+                                                updateInvestor("checkSizeRange", vals);
+                                            }}
+                                            disabled={false}
                                         />
                                     </div>
                                     <div className="grid grid-cols-2 gap-3">
@@ -571,11 +604,13 @@ export default function OnboardingFlow() {
                                             <Input
                                                 type="number"
                                                 min={0}
-                                                max={investorData.checkSizeRange[1] || 1000000}
                                                 value={investorData.checkSizeRange[0] ?? 0}
                                                 onChange={(e) => {
-                                                    const v = Math.max(0, Math.min(Number(e.target.value || 0), investorData.checkSizeRange[1] || 1000000));
-                                                    updateInvestor("checkSizeRange", [v, investorData.checkSizeRange[1] || v]);
+                                                    const num = Number(e.target.value || 0);
+                                                    const v = isNaN(num) ? 0 : Math.max(0, num);
+                                                    const currentMax = investorData.checkSizeRange[1] ?? v;
+                                                    const newMax = Math.max(v, currentMax);
+                                                    updateInvestor("checkSizeRange", [v, newMax]);
                                                 }}
                                             />
                                         </div>
@@ -583,11 +618,10 @@ export default function OnboardingFlow() {
                                             <Label>Max</Label>
                                             <Input
                                                 type="number"
-                                                min={investorData.checkSizeRange[0] || 0}
-                                                max={1000000}
                                                 value={investorData.checkSizeRange[1] ?? 0}
                                                 onChange={(e) => {
-                                                    const v = Math.max(investorData.checkSizeRange[0] || 0, Math.min(Number(e.target.value || 0), 1000000));
+                                                    const num = Number(e.target.value || 0);
+                                                    const v = isNaN(num) ? 0 : Math.max(investorData.checkSizeRange[0] || 0, num);
                                                     updateInvestor("checkSizeRange", [investorData.checkSizeRange[0] || 0, v]);
                                                 }}
                                             />
@@ -723,10 +757,13 @@ export default function OnboardingFlow() {
                                             <div className="text-muted-foreground mb-1">Industry</div>
                                             {startupData.industry.length ? (
                                                 <div className="flex flex-wrap gap-1">
-                                                    {startupData.industry.map((i) => (
-                                                        <span key={i}
+                                                    {startupData.industry.map((i, idx) => {
+                                                    const key = `${i}-${idx}`;
+                                                    return (
+                                                        <span key={key}
                                                               className="rounded-md border px-2 py-0.5 text-xs bg-background">{i}</span>
-                                                    ))}
+                                                    );
+                                                })}
                                                 </div>
                                             ) : (
                                                 <div className="font-medium">-</div>
@@ -736,10 +773,13 @@ export default function OnboardingFlow() {
                                             <div className="text-muted-foreground mb-1">Business Model</div>
                                             {startupData.businessModel.length ? (
                                                 <div className="flex flex-wrap gap-1">
-                                                    {startupData.businessModel.map((m) => (
-                                                        <span key={m}
+                                                    {startupData.businessModel.map((m, idx) => {
+                                                    const key = `${m}-${idx}`;
+                                                    return (
+                                                        <span key={key}
                                                               className="rounded-md border px-2 py-0.5 text-xs bg-background">{m}</span>
-                                                    ))}
+                                                    );
+                                                })}
                                                 </div>
                                             ) : (
                                                 <div className="font-medium">-</div>
@@ -767,10 +807,13 @@ export default function OnboardingFlow() {
                                             <div className="text-muted-foreground mb-1">Preferred Stages</div>
                                             {investorData.preferredStage.length ? (
                                                 <div className="flex flex-wrap gap-1">
-                                                    {investorData.preferredStage.map((s) => (
-                                                        <span key={s}
+                                                    {investorData.preferredStage.map((s, idx) => {
+                                                    const key = `${s}-${idx}`;
+                                                    return (
+                                                        <span key={key}
                                                               className="rounded-md border px-2 py-0.5 text-xs bg-background">{s}</span>
-                                                    ))}
+                                                    );
+                                                })}
                                                 </div>
                                             ) : (
                                                 <div className="font-medium">-</div>
@@ -780,10 +823,13 @@ export default function OnboardingFlow() {
                                             <div className="text-muted-foreground mb-1">Preferred Industries</div>
                                             {investorData.preferredIndustry.length ? (
                                                 <div className="flex flex-wrap gap-1">
-                                                    {investorData.preferredIndustry.map((i) => (
-                                                        <span key={i}
+                                                    {investorData.preferredIndustry.map((i, idx) => {
+                                                    const key = `${i}-${idx}`;
+                                                    return (
+                                                        <span key={key}
                                                               className="rounded-md border px-2 py-0.5 text-xs bg-background">{i}</span>
-                                                    ))}
+                                                    );
+                                                })}
                                                 </div>
                                             ) : (
                                                 <div className="font-medium">-</div>
@@ -793,10 +839,14 @@ export default function OnboardingFlow() {
                                             <div className="text-muted-foreground mb-1">Preferred Business Models</div>
                                             {investorData.preferredBusinessModels.length ? (
                                                 <div className="flex flex-wrap gap-1">
-                                                    {investorData.preferredBusinessModels.map((m) => (
-                                                        <span key={m}
-                                                              className="rounded-md border px-2 py-0.5 text-xs bg-background">{m}</span>
-                                                    ))}
+                                                    {investorData.preferredBusinessModels.map((m, idx) => {
+                                                    const label = m === "Other" && investorBusinessOther ? `Other: ${investorBusinessOther}` : m;
+                                                    const key = `${label}-${idx}`;
+                                                    return (
+                                                        <span key={key}
+                                                              className="rounded-md border px-2 py-0.5 text-xs bg-background">{label}</span>
+                                                    );
+                                                })}
                                                 </div>
                                             ) : (
                                                 <div className="font-medium">-</div>
