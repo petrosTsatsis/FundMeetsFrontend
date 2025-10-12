@@ -4,7 +4,7 @@ import * as React from "react";
 import {
     flexRender,
 } from "@tanstack/react-table";
-import {Button} from "@/components/ui/button";
+import { Button } from "@/components/ui/button";
 import {
     Table,
     TableBody,
@@ -13,7 +13,7 @@ import {
     TableHeader,
     TableRow,
 } from "@/components/ui/table";
-import {Label} from "@/components/ui/label";
+import { Label } from "@/components/ui/label";
 import {
     Select,
     SelectContent,
@@ -21,13 +21,13 @@ import {
     SelectTrigger,
     SelectValue,
 } from "@/components/ui/select";
-import {TabsContent} from "@/components/ui/tabs";
+import { TabsContent } from "@/components/ui/tabs";
 
-export function InvestorsTableContent({
-                                          value,
-                                          table,
-                                          columns,
-                                      }: {
+export function StartupsTableContent({
+    value,
+    table,
+    columns,
+}: {
     value: string;
     table: any;
     columns: any[];

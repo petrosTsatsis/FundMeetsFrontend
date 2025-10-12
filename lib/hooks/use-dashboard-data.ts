@@ -56,12 +56,48 @@ export function useRecommendedInvestors() {
     });
 }
 
+export function useTopStartups() {
+    const api = useApi();
+
+    return useQuery({
+        queryKey: ["top-startups"],
+        queryFn: () => api?.getTopStartups() ?? Promise.reject("API not available"),
+        enabled: !!api,
+        staleTime: 5 * 60 * 1000, // 5 minutes
+        gcTime: 15 * 60 * 1000, // 15 minutes
+    });
+}
+
 export function useTopInvestors() {
     const api = useApi();
 
     return useQuery({
         queryKey: ["top-investors"],
         queryFn: () => api?.getTopInvestors() ?? Promise.reject("API not available"),
+        enabled: !!api,
+        staleTime: 5 * 60 * 1000, // 5 minutes
+        gcTime: 15 * 60 * 1000, // 15 minutes
+    });
+}
+
+export function useNewStartups() {
+    const api = useApi();
+
+    return useQuery({
+        queryKey: ["new-startups"],
+        queryFn: () => api?.getNewStartups() ?? Promise.reject("API not available"),
+        enabled: !!api,
+        staleTime: 5 * 60 * 1000, // 5 minutes
+        gcTime: 15 * 60 * 1000, // 15 minutes
+    });
+}
+
+export function useNewInvestors() {
+    const api = useApi();
+
+    return useQuery({
+        queryKey: ["new-investors"],
+        queryFn: () => api?.getNewInvestors() ?? Promise.reject("API not available"),
         enabled: !!api,
         staleTime: 5 * 60 * 1000, // 5 minutes
         gcTime: 15 * 60 * 1000, // 15 minutes
