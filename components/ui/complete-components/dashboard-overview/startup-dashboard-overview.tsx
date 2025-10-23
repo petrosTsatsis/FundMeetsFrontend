@@ -370,7 +370,7 @@ export function StartupDashboardOverview() {
                     </Card>
                   </CarouselItem>
                 ) : (
-                  recommendedInvestors.map((investor) => (
+                  recommendedInvestors.map((investor: any) => (
                     <CarouselItem
                       key={investor.id}
                       className="pl-2 md:pl-4 basis-full sm:basis-1/2 md:basis-1/3 lg:basis-1/4 xl:basis-1/4"
@@ -387,7 +387,7 @@ export function StartupDashboardOverview() {
                               <AvatarFallback className="text-base font-semibold">
                                 {investor.name
                                   .split(" ")
-                                  .map((n) => n[0])
+                                  .map((n: any) => n[0])
                                   .join("")}
                               </AvatarFallback>
                             </Avatar>
@@ -438,7 +438,7 @@ export function StartupDashboardOverview() {
                           <div className="flex flex-wrap gap-1 justify-center min-h-[24px]">
                             {(investor.tags || [])
                               .slice(0, 3)
-                              .map((tag, index) => (
+                              .map((tag: any, index: any) => (
                                 <Badge
                                   key={index}
                                   variant="secondary"
@@ -577,7 +577,7 @@ export function StartupDashboardOverview() {
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-            {newInvestors.map((investor) => (
+            {newInvestors.map((investor: any) => (
               <Card
                 key={investor.id}
                 className="hover:shadow-lg transition-all duration-200 hover:scale-[1.02] bg-white flex flex-col h-full"
@@ -594,7 +594,7 @@ export function StartupDashboardOverview() {
                           <AvatarFallback className="text-sm font-semibold">
                             {investor.name
                               .split(" ")
-                              .map((n) => n[0])
+                              .map((n: any) => n[0])
                               .join("")}
                           </AvatarFallback>
                         </Avatar>
@@ -632,7 +632,7 @@ export function StartupDashboardOverview() {
 
                   {/* Tags Section */}
                   <div className="flex flex-wrap gap-1 mt-2 min-h-[24px]">
-                    {(investor.tags ?? []).slice(0, 3).map((tag, index) => (
+                    {(investor.tags ?? []).slice(0, 3).map((tag: any, index: any) => (
                       <Badge
                         key={index}
                         variant="secondary"
