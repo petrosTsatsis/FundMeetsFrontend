@@ -2,6 +2,7 @@
 
 import * as React from "react";
 import {
+  BarChart3,
   Folder,
   Handshake,
   Search,
@@ -127,6 +128,13 @@ export function AppSidebar({
         icon: SquareTerminal,
         section: "interest-requests",
         isActive: currentSection === "interest-requests",
+      },
+      {
+        title: "Analytics",
+        url: "#",
+        icon: BarChart3,
+        section: "analytics",
+        isActive: currentSection === "analytics",
       },
       {
         title: "Notifications",

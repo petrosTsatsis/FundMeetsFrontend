@@ -109,6 +109,48 @@ export class ApiClient {
     return this.request(`/analytics/trends?months=${months}`);
   }
 
+  // User-facing analytics endpoints
+  async getUserAnalytics(userId: string) {
+    return this.request(`/analytics/user/${userId}`);
+  }
+
+  async getUserBenchmarks(userId: string) {
+    return this.request(`/analytics/user/${userId}/benchmarks`);
+  }
+
+  async getPostAnalytics(postId: string) {
+    return this.request(`/analytics/post/${postId}`);
+  }
+
+  async trackView(data: {
+    viewerId: string;
+    viewedId: string;
+    viewType: string;
+    duration?: number;
+    ipAddress?: string;
+    userAgent?: string;
+  }) {
+    return this.request('/analytics/track/view', {
+      method: 'POST',
+      body: JSON.stringify(data),
+    });
+  }
+
+  async trackSearch(data: {
+    userId: string;
+    query: string;
+    results: number;
+    clicked?: boolean;
+    clickedId?: string;
+    ipAddress?: string;
+    userAgent?: string;
+  }) {
+    return this.request('/analytics/track/search', {
+      method: 'POST',
+      body: JSON.stringify(data),
+    });
+  }
+
   // Auth endpoints
   async loginAdmin(email: string, password: string) {
     return this.request('/auth/admin/login', {
@@ -145,4 +187,11 @@ export const analyticsApi = {
   getMonetization: () => apiClient.getMonetizationMetrics(),
   getFinancial: () => apiClient.getEnhancedFinancialMetrics(),
   getTrends: (months?: number) => apiClient.getGrowthTrends(months),
+  
+  // User-facing analytics
+  getUserAnalytics: (userId: string) => apiClient.getUserAnalytics(userId),
+  getUserBenchmarks: (userId: string) => apiClient.getUserBenchmarks(userId),
+  getPostAnalytics: (postId: string) => apiClient.getPostAnalytics(postId),
+  trackView: (data: any) => apiClient.trackView(data),
+  trackSearch: (data: any) => apiClient.trackSearch(data),
 };

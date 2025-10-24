@@ -14,6 +14,7 @@ import { SidebarInset, SidebarTrigger } from "@/components/ui/sidebar";
 import { UserData } from "@/lib/api";
 import { InvestorDashboardOverview } from "@/components/ui/complete-components/dashboard-overview/investor-dashboard-overview";
 import { StartupDashboardOverview } from "@/components/ui/complete-components/dashboard-overview/startup-dashboard-overview";
+import { UserAnalyticsDashboard } from "@/components/ui/complete-components/analytics/user-analytics-dashboard";
 
 interface DashboardContentProps {
   currentSection: string;
@@ -42,6 +43,7 @@ export function DashboardContent({
         main: "Interest Requests",
         sub: "Pending Requests",
       },
+      analytics: { main: "Analytics", sub: "Profile Performance" },
       notifications: { main: "Notifications", sub: "Recent Updates" },
       settings: { main: "Settings", sub: "Account & Preferences" },
       "deal-rooms": { main: "Deal Rooms", sub: "Active Deals" },
@@ -200,6 +202,13 @@ export function DashboardContent({
                 </div>
               </div>
             </div>
+          </>
+        );
+
+      case "analytics":
+        return (
+          <>
+            <UserAnalyticsDashboard userId={userProfile?.id || ""} />
           </>
         );
 
