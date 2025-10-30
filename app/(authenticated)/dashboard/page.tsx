@@ -62,18 +62,47 @@ const saveProfileToStorage = (userId: string, entry: CachedProfileEntry) => {
   }
 };
 
+const resolveCachedProfile = (
+  userId: string
+): CachedProfileEntry | null => {
+  const now = Date.now();
+  const cached = profileCache.get(userId);
+
+  if (cached && now - cached.timestamp < CACHE_DURATION) {
+    return cached;
+  }
+
+  const stored = loadProfileFromStorage(userId);
+  if (stored) {
+    profileCache.set(userId, stored);
+    return stored;
+  }
+
+  profileCache.delete(userId);
+  return null;
+};
+
 export default function Dashboard() {
   const { user, isLoaded } = useUser();
   const router = useRouter();
   const api = useApi();
-  const [userProfile, setUserProfile] = useState<UserData | null>(null);
-  const [isStartup, setIsStartup] = useState(false);
-  const [isLoading, setIsLoading] = useState(false);
-  const [currentSection, setCurrentSection] = useState("overview");
-  const [hasWarmCache, setHasWarmCache] = useState(false);
 
   // Memoize the user ID to avoid unnecessary re-renders
   const userId = useMemo(() => user?.id, [user?.id]);
+  const warmProfileEntry = useMemo(
+    () => (userId ? resolveCachedProfile(userId) : null),
+    [userId]
+  );
+  const [userProfile, setUserProfile] = useState<UserData | null>(
+    () => warmProfileEntry?.profile ?? null
+  );
+  const [isStartup, setIsStartup] = useState(
+    () => warmProfileEntry?.profile?.role === "STARTUP"
+  );
+  const [currentSection, setCurrentSection] = useState("overview");
+  const [hasWarmCache, setHasWarmCache] = useState(
+    () => warmProfileEntry !== null
+  );
 
   useEffect(() => {
     if (!userId) {
@@ -83,38 +112,22 @@ export default function Dashboard() {
       return;
     }
 
-    const now = Date.now();
-    const cached = profileCache.get(userId);
-
-    if (cached && now - cached.timestamp < CACHE_DURATION) {
-      setUserProfile(cached.profile);
-      setIsStartup(cached.profile.role === "STARTUP");
-      setHasWarmCache(true);
-      return;
-    }
-
-    const stored = loadProfileFromStorage(userId);
-    if (stored) {
-      profileCache.set(userId, stored);
-      setUserProfile(stored.profile);
-      setIsStartup(stored.profile.role === "STARTUP");
+    if (warmProfileEntry) {
+      profileCache.set(userId, warmProfileEntry);
+      setUserProfile(warmProfileEntry.profile);
+      setIsStartup(warmProfileEntry.profile.role === "STARTUP");
       setHasWarmCache(true);
       return;
     }
 
     setHasWarmCache(false);
-  }, [userId]);
+  }, [userId, warmProfileEntry]);
 
   useEffect(() => {
     const checkUserRole = async () => {
       if (!isLoaded || !userId || !api) return;
 
       try {
-        // Only show loading for actual API calls
-        if (!hasWarmCache) {
-          setIsLoading(true);
-        }
-
         // Fetch fresh profile
         const profile = await api.getUserProfile(userId);
         const now = Date.now();
@@ -133,41 +146,11 @@ export default function Dashboard() {
           console.error("Error fetching user profile:", error);
         }
         router.push("/");
-      } finally {
-        setIsLoading(false);
       }
     };
 
     checkUserRole();
   }, [isLoaded, userId, api, router, hasWarmCache]);
-
-  // Show loading only during actual API calls
-  if (isLoading) {
-    return (
-      <div className="min-h-screen bg-background">
-        <div className="flex h-screen items-center justify-center">
-          <div className="flex flex-col items-center gap-4">
-            <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary"></div>
-            <p className="text-muted-foreground">Loading Dashboard...</p>
-          </div>
-        </div>
-      </div>
-    );
-  }
-
-  // If no profile yet, show minimal loading
-  if (!userProfile) {
-    return (
-      <div className="min-h-screen bg-background">
-        <div className="flex h-screen items-center justify-center">
-          <div className="flex flex-col items-center gap-4">
-            <div className="animate-pulse rounded-full h-12 w-12 bg-muted"></div>
-            <p className="text-muted-foreground">Initializing...</p>
-          </div>
-        </div>
-      </div>
-    );
-  }
 
   return (
     <Suspense fallback={null}>
