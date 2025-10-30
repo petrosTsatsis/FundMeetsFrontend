@@ -10,11 +10,57 @@ import { AppSidebar } from "@/components/ui/complete-components/sidebar/app-side
 import { DashboardContent } from "./dashboard-content";
 
 // Cache for user profiles to avoid refetching
-const profileCache = new Map<
-  string,
-  { profile: UserData; timestamp: number }
->();
+type CachedProfileEntry = { profile: UserData; timestamp: number };
+const profileCache = new Map<string, CachedProfileEntry>();
 const CACHE_DURATION = 5 * 60 * 1000; // 5 minutes
+const PROFILE_STORAGE_PREFIX = "fm-dashboard-profile";
+
+const getProfileStorageKey = (userId: string) =>
+  `${PROFILE_STORAGE_PREFIX}:${userId}`;
+
+const loadProfileFromStorage = (
+  userId: string
+): CachedProfileEntry | null => {
+  if (typeof window === "undefined") return null;
+
+  try {
+    const raw = window.sessionStorage.getItem(getProfileStorageKey(userId));
+    if (!raw) return null;
+
+    const parsed = JSON.parse(raw) as CachedProfileEntry | null;
+    if (!parsed?.profile || typeof parsed.timestamp !== "number") {
+      window.sessionStorage.removeItem(getProfileStorageKey(userId));
+      return null;
+    }
+
+    if (Date.now() - parsed.timestamp > CACHE_DURATION) {
+      window.sessionStorage.removeItem(getProfileStorageKey(userId));
+      return null;
+    }
+
+    return parsed;
+  } catch (error) {
+    if (process.env.NODE_ENV === "development") {
+      console.warn("Failed to read cached profile from sessionStorage", error);
+    }
+    return null;
+  }
+};
+
+const saveProfileToStorage = (userId: string, entry: CachedProfileEntry) => {
+  if (typeof window === "undefined") return;
+
+  try {
+    window.sessionStorage.setItem(
+      getProfileStorageKey(userId),
+      JSON.stringify(entry)
+    );
+  } catch (error) {
+    if (process.env.NODE_ENV === "development") {
+      console.warn("Failed to cache profile in sessionStorage", error);
+    }
+  }
+};
 
 export default function Dashboard() {
   const { user, isLoaded } = useUser();
@@ -24,37 +70,63 @@ export default function Dashboard() {
   const [isStartup, setIsStartup] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [currentSection, setCurrentSection] = useState("overview");
+  const [hasWarmCache, setHasWarmCache] = useState(false);
 
   // Memoize the user ID to avoid unnecessary re-renders
   const userId = useMemo(() => user?.id, [user?.id]);
+
+  useEffect(() => {
+    if (!userId) {
+      setUserProfile(null);
+      setIsStartup(false);
+      setHasWarmCache(false);
+      return;
+    }
+
+    const now = Date.now();
+    const cached = profileCache.get(userId);
+
+    if (cached && now - cached.timestamp < CACHE_DURATION) {
+      setUserProfile(cached.profile);
+      setIsStartup(cached.profile.role === "STARTUP");
+      setHasWarmCache(true);
+      return;
+    }
+
+    const stored = loadProfileFromStorage(userId);
+    if (stored) {
+      profileCache.set(userId, stored);
+      setUserProfile(stored.profile);
+      setIsStartup(stored.profile.role === "STARTUP");
+      setHasWarmCache(true);
+      return;
+    }
+
+    setHasWarmCache(false);
+  }, [userId]);
 
   useEffect(() => {
     const checkUserRole = async () => {
       if (!isLoaded || !userId || !api) return;
 
       try {
-        // Check cache first
-        const cached = profileCache.get(userId);
-        const now = Date.now();
-
-        if (cached && now - cached.timestamp < CACHE_DURATION) {
-          // Use cached profile - instant load!
-          setUserProfile(cached.profile);
-          setIsStartup(cached.profile.role === "STARTUP");
-          return;
-        }
-
         // Only show loading for actual API calls
-        setIsLoading(true);
+        if (!hasWarmCache) {
+          setIsLoading(true);
+        }
 
         // Fetch fresh profile
         const profile = await api.getUserProfile(userId);
+        const now = Date.now();
+        const entry: CachedProfileEntry = { profile, timestamp: now };
 
         // Cache the profile
-        profileCache.set(userId, { profile, timestamp: now });
+        profileCache.set(userId, entry);
+        saveProfileToStorage(userId, entry);
 
         setUserProfile(profile);
         setIsStartup(profile.role === "STARTUP");
+        setHasWarmCache(true);
       } catch (error) {
         // Only log errors in development
         if (process.env.NODE_ENV === 'development') {
@@ -67,7 +139,7 @@ export default function Dashboard() {
     };
 
     checkUserRole();
-  }, [isLoaded, userId, api, router]);
+  }, [isLoaded, userId, api, router, hasWarmCache]);
 
   // Show loading only during actual API calls
   if (isLoading) {
