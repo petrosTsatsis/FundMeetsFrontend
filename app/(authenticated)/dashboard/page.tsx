@@ -2,116 +2,131 @@
 
 import { useUser } from "@clerk/nextjs";
 import { useRouter } from "next/navigation";
-import { useEffect, useState, useMemo, Suspense } from "react";
+import {
+  Suspense,
+  useCallback,
+  useEffect,
+  useMemo,
+  useState,
+  useTransition,
+} from "react";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useApi, UserData } from "@/lib/api";
 import { UserProfileProvider } from "@/lib/UserProfileContext";
 import { SidebarProvider } from "@/components/ui/sidebar";
 import { AppSidebar } from "@/components/ui/complete-components/sidebar/app-sidebar";
 import { DashboardContent } from "./dashboard-content";
 
-// Cache for user profiles to avoid refetching
-const profileCache = new Map<
-  string,
-  { profile: UserData; timestamp: number }
->();
-const CACHE_DURATION = 5 * 60 * 1000; // 5 minutes
+const userProfileQueryKey = (userId: string | null | undefined) => [
+  "user-profile",
+  userId,
+];
+
+function LoadingState({
+  label,
+  variant = "spinner",
+}: {
+  label: string;
+  variant?: "spinner" | "pulse";
+}) {
+  return (
+    <div className="min-h-screen bg-background">
+      <div className="flex h-screen items-center justify-center">
+        <div className="flex flex-col items-center gap-4" role="status">
+          {variant === "spinner" ? (
+            <div className="h-12 w-12 animate-spin rounded-full border-2 border-primary/30 border-t-primary" />
+          ) : (
+            <div className="h-12 w-12 animate-pulse rounded-full bg-muted" />
+          )}
+          <p className="text-muted-foreground">{label}</p>
+        </div>
+      </div>
+    </div>
+  );
+}
 
 export default function Dashboard() {
   const { user, isLoaded } = useUser();
   const router = useRouter();
   const api = useApi();
-  const [userProfile, setUserProfile] = useState<UserData | null>(null);
-  const [isStartup, setIsStartup] = useState(false);
-  const [isLoading, setIsLoading] = useState(false);
+  const queryClient = useQueryClient();
   const [currentSection, setCurrentSection] = useState("overview");
+  const [isSectionPending, startSectionTransition] = useTransition();
 
-  // Memoize the user ID to avoid unnecessary re-renders
-  const userId = useMemo(() => user?.id, [user?.id]);
+  const userId = useMemo(() => user?.id ?? null, [user?.id]);
+  const queryKey = useMemo(() => userProfileQueryKey(userId), [userId]);
+
+  const cachedProfile = useMemo(() => {
+    if (!userId) return undefined;
+    return queryClient.getQueryData<UserData>(queryKey);
+  }, [queryClient, queryKey, userId]);
+
+  const {
+    data: userProfile,
+    isLoading,
+    isFetching,
+    error,
+  } = useQuery({
+    queryKey,
+    queryFn: () => api!.getUserProfile(userId as string),
+    enabled: Boolean(isLoaded && api && userId),
+    placeholderData: cachedProfile ?? undefined,
+  });
 
   useEffect(() => {
-    const checkUserRole = async () => {
-      if (!isLoaded || !userId || !api) return;
+    if (!api || !userId || cachedProfile) return;
 
-      try {
-        // Check cache first
-        const cached = profileCache.get(userId);
-        const now = Date.now();
+    queryClient.prefetchQuery({
+      queryKey,
+      queryFn: () => api.getUserProfile(userId),
+    });
+  }, [api, cachedProfile, queryClient, queryKey, userId]);
 
-        if (cached && now - cached.timestamp < CACHE_DURATION) {
-          // Use cached profile - instant load!
-          setUserProfile(cached.profile);
-          setIsStartup(cached.profile.role === "STARTUP");
-          return;
-        }
+  useEffect(() => {
+    if (!error) return;
 
-        // Only show loading for actual API calls
-        setIsLoading(true);
+    if (process.env.NODE_ENV === "development") {
+      console.error("Error fetching user profile:", error);
+    }
 
-        // Fetch fresh profile
-        const profile = await api.getUserProfile(userId);
+    router.replace("/");
+  }, [error, router]);
 
-        // Cache the profile
-        profileCache.set(userId, { profile, timestamp: now });
+  const handleSectionChange = useCallback((section: string) => {
+    startSectionTransition(() => {
+      setCurrentSection(section);
+    });
+  }, [startSectionTransition]);
 
-        setUserProfile(profile);
-        setIsStartup(profile.role === "STARTUP");
-      } catch (error) {
-        // Only log errors in development
-        if (process.env.NODE_ENV === 'development') {
-          console.error("Error fetching user profile:", error);
-        }
-        router.push("/");
-      } finally {
-        setIsLoading(false);
-      }
-    };
+  const isStartup = userProfile?.role === "STARTUP";
 
-    checkUserRole();
-  }, [isLoaded, userId, api, router]);
-
-  // Show loading only during actual API calls
-  if (isLoading) {
-    return (
-      <div className="min-h-screen bg-background">
-        <div className="flex h-screen items-center justify-center">
-          <div className="flex flex-col items-center gap-4">
-            <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary"></div>
-            <p className="text-muted-foreground">Loading Dashboard...</p>
-          </div>
-        </div>
-      </div>
-    );
+  if (!isLoaded || !api) {
+    return <LoadingState label="Preparing your dashboard..." variant="pulse" />;
   }
 
-  // If no profile yet, show minimal loading
+  if (isLoading && !userProfile) {
+    return <LoadingState label="Loading dashboard..." />;
+  }
+
   if (!userProfile) {
-    return (
-      <div className="min-h-screen bg-background">
-        <div className="flex h-screen items-center justify-center">
-          <div className="flex flex-col items-center gap-4">
-            <div className="animate-pulse rounded-full h-12 w-12 bg-muted"></div>
-            <p className="text-muted-foreground">Initializing...</p>
-          </div>
-        </div>
-      </div>
-    );
+    return <LoadingState label="Initializing..." variant="pulse" />;
   }
 
   return (
     <Suspense fallback={null}>
       <SidebarProvider>
         <UserProfileProvider initialProfile={userProfile}>
-          {/* <div className="flex h-screen"> */}
           <AppSidebar
-            onSectionChange={setCurrentSection}
+            onSectionChange={handleSectionChange}
             currentSection={currentSection}
           />
           <DashboardContent
             currentSection={currentSection}
-            isStartup={isStartup}
+            isStartup={Boolean(isStartup)}
             userProfile={userProfile}
+            isSectionTransitioning={isSectionPending}
+            isRefreshing={isFetching && Boolean(userProfile)}
           />
-          {/* </div> */}
         </UserProfileProvider>
       </SidebarProvider>
     </Suspense>

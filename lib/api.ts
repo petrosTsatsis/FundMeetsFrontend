@@ -1092,13 +1092,7 @@ export class ApiClient {
   }
 
   async getUserProfile(userId: string): Promise<UserData> {
-    const response = await fetch(`${this.baseUrl}/users/${userId}/profile`, {
-      headers: this.getHeaders(),
-    });
-    if (!response.ok) {
-      throw new Error(`Failed to fetch user profile: ${response.statusText}`);
-    }
-    return response.json();
+    return this.requestWithCache(`/users/${userId}/profile`, {}, 5 * 60 * 1000);
   }
 
   async updateUserProfile(

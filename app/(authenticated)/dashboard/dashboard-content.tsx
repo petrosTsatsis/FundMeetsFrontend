@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo } from "react";
+import { memo, useMemo } from "react";
 import {
   Breadcrumb,
   BreadcrumbItem,
@@ -14,18 +14,23 @@ import { SidebarInset, SidebarTrigger } from "@/components/ui/sidebar";
 import { UserData } from "@/lib/api";
 import { InvestorDashboardOverview } from "@/components/ui/complete-components/dashboard-overview/investor-dashboard-overview";
 import { StartupDashboardOverview } from "@/components/ui/complete-components/dashboard-overview/startup-dashboard-overview";
+import { cn } from "@/lib/utils";
 
 interface DashboardContentProps {
   currentSection: string;
   isStartup: boolean;
   userProfile: UserData | null;
+  isSectionTransitioning?: boolean;
+  isRefreshing?: boolean;
 }
 
-export function DashboardContent({
+const DashboardContentComponent = ({
   currentSection,
   isStartup,
   userProfile,
-}: DashboardContentProps) {
+  isSectionTransitioning = false,
+  isRefreshing = false,
+}: DashboardContentProps) => {
   // Dynamic breadcrumb configuration based on current section
   const breadcrumbConfig = useMemo(() => {
     const configs: Record<string, { main: string; sub?: string }> = {
@@ -50,21 +55,18 @@ export function DashboardContent({
     return configs[currentSection] || { main: "Dashboard", sub: "Overview" };
   }, [currentSection, isStartup]);
 
-  // Dynamic content based on current section
-  const renderContent = () => {
+  const overviewContent = useMemo(() => {
+    return (
+      <>
+        {isStartup ? <StartupDashboardOverview /> : <InvestorDashboardOverview />}
+      </>
+    );
+  }, [isStartup]);
+
+  const sectionContent = useMemo(() => {
     switch (currentSection) {
       case "overview":
-        return (
-          // Create and render InvestorDashboardOverview or StartupDashboardOverview component
-          <>
-            {isStartup ? (
-              <StartupDashboardOverview />
-            ) : (
-              <InvestorDashboardOverview />
-            )}
-          </>
-        );
-
+        return overviewContent;
       case "matches":
         return (
           <>
@@ -73,21 +75,17 @@ export function DashboardContent({
                 <h3 className="text-lg font-semibold mb-4">Recent Matches</h3>
                 <div className="space-y-3">
                   <div className="flex items-center gap-3 p-3 bg-muted/50 rounded-lg">
-                    <div className="w-10 h-10 bg-primary/20 rounded-full" />
+                    <div className="h-10 w-10 rounded-full bg-primary/20" />
                     <div>
                       <p className="font-medium">Tech Startup Fund</p>
-                      <p className="text-sm text-muted-foreground">
-                        Matched 2 days ago
-                      </p>
+                      <p className="text-sm text-muted-foreground">Matched 2 days ago</p>
                     </div>
                   </div>
                   <div className="flex items-center gap-3 p-3 bg-muted/50 rounded-lg">
-                    <div className="w-10 h-10 bg-primary/20 rounded-full" />
+                    <div className="h-10 w-10 rounded-full bg-primary/20" />
                     <div>
                       <p className="font-medium">Healthcare Innovation</p>
-                      <p className="text-sm text-muted-foreground">
-                        Matched 1 week ago
-                      </p>
+                      <p className="text-sm text-muted-foreground">Matched 1 week ago</p>
                     </div>
                   </div>
                 </div>
@@ -112,50 +110,43 @@ export function DashboardContent({
             </div>
           </>
         );
-
       case "interest-requests":
         return (
           <>
             <div className="space-y-4">
               <div className="bg-card border rounded-lg p-6">
-                <h3 className="text-lg font-semibold mb-4">
-                  Pending Interest Requests
-                </h3>
+                <h3 className="text-lg font-semibold mb-4">Pending Interest Requests</h3>
                 <div className="space-y-3">
-                  <div className="flex items-center justify-between p-4 bg-muted/50 rounded-lg">
+                  <div className="flex items-center justify-between rounded-lg bg-muted/50 p-4">
                     <div className="flex items-center gap-3">
-                      <div className="w-12 h-12 bg-primary/20 rounded-full" />
+                      <div className="h-12 w-12 rounded-full bg-primary/20" />
                       <div>
                         <p className="font-medium">AI Startup Proposal</p>
-                        <p className="text-sm text-muted-foreground">
-                          Requested 3 days ago
-                        </p>
+                        <p className="text-sm text-muted-foreground">Requested 3 days ago</p>
                       </div>
                     </div>
                     <div className="flex gap-2">
-                      <button className="px-4 py-2 bg-primary text-primary-foreground rounded-md text-sm">
+                      <button className="rounded-md bg-primary px-4 py-2 text-sm text-primary-foreground">
                         Accept
                       </button>
-                      <button className="px-4 py-2 bg-muted text-muted-foreground rounded-md text-sm">
+                      <button className="rounded-md bg-muted px-4 py-2 text-sm text-muted-foreground">
                         Decline
                       </button>
                     </div>
                   </div>
-                  <div className="flex items-center justify-between p-4 bg-muted/50 rounded-lg">
+                  <div className="flex items-center justify-between rounded-lg bg-muted/50 p-4">
                     <div className="flex items-center gap-3">
-                      <div className="w-12 h-12 bg-primary/20 rounded-full" />
+                      <div className="h-12 w-12 rounded-full bg-primary/20" />
                       <div>
                         <p className="font-medium">Green Energy Project</p>
-                        <p className="text-sm text-muted-foreground">
-                          Requested 1 week ago
-                        </p>
+                        <p className="text-sm text-muted-foreground">Requested 1 week ago</p>
                       </div>
                     </div>
                     <div className="flex gap-2">
-                      <button className="px-4 py-2 bg-primary text-primary-foreground rounded-md text-sm">
+                      <button className="rounded-md bg-primary px-4 py-2 text-sm text-primary-foreground">
                         Accept
                       </button>
-                      <button className="px-4 py-2 bg-muted text-muted-foreground rounded-md text-sm">
+                      <button className="rounded-md bg-muted px-4 py-2 text-sm text-muted-foreground">
                         Decline
                       </button>
                     </div>
@@ -165,30 +156,25 @@ export function DashboardContent({
             </div>
           </>
         );
-
       case "notifications":
         return (
           <>
             <div className="space-y-4">
               <div className="bg-card border rounded-lg p-6">
-                <h3 className="text-lg font-semibold mb-4">
-                  Recent Notifications
-                </h3>
+                <h3 className="text-lg font-semibold mb-4">Recent Notifications</h3>
                 <div className="space-y-3">
-                  <div className="flex items-center gap-3 p-3 bg-muted/50 rounded-lg">
-                    <div className="w-3 h-3 bg-primary rounded-full" />
+                  <div className="flex items-center gap-3 rounded-lg bg-muted/50 p-3">
+                    <div className="h-3 w-3 rounded-full bg-primary" />
                     <div>
                       <p className="font-medium">New Match Available</p>
                       <p className="text-sm text-muted-foreground">
                         You have a new potential match with TechCorp
                       </p>
-                      <p className="text-xs text-muted-foreground">
-                        2 hours ago
-                      </p>
+                      <p className="text-xs text-muted-foreground">2 hours ago</p>
                     </div>
                   </div>
-                  <div className="flex items-center gap-3 p-3 bg-muted/50 rounded-lg">
-                    <div className="w-3 h-3 bg-success rounded-full" />
+                  <div className="flex items-center gap-3 rounded-lg bg-muted/50 p-3">
+                    <div className="h-3 w-3 rounded-full bg-success" />
                     <div>
                       <p className="font-medium">Interest Request Accepted</p>
                       <p className="text-sm text-muted-foreground">
@@ -202,22 +188,22 @@ export function DashboardContent({
             </div>
           </>
         );
-
       case "settings":
         return (
           <>
             <div className="grid auto-rows-min gap-4 md:grid-cols-2">
-              <div className="bg-card border rounded-lg p-6">
-                <h3 className="text-lg font-semibold mb-4">Profile Settings</h3>
+              <div className="rounded-lg border bg-card p-6">
+                <h3 className="mb-4 text-lg font-semibold">Profile Settings</h3>
                 <div className="space-y-4">
                   <div>
                     <label className="text-sm font-medium">Display Name</label>
                     <input
                       type="text"
-                      className="w-full mt-1 p-2 border rounded-md"
+                      className="mt-1 w-full rounded-md border p-2"
                       defaultValue={
                         userProfile?.investorProfile?.name ||
-                        userProfile?.startupProfile?.name
+                        userProfile?.startupProfile?.name ||
+                        ""
                       }
                     />
                   </div>
@@ -225,45 +211,56 @@ export function DashboardContent({
                     <label className="text-sm font-medium">Email</label>
                     <input
                       type="email"
-                      className="w-full mt-1 p-2 border rounded-md"
+                      className="mt-1 w-full rounded-md border p-2"
                       defaultValue={userProfile?.email}
                     />
                   </div>
                 </div>
               </div>
-              <div className="bg-card border rounded-lg p-6">
-                <h3 className="text-lg font-semibold mb-4">Preferences</h3>
+              <div className="rounded-lg border bg-card p-6">
+                <h3 className="mb-4 text-lg font-semibold">Preferences</h3>
                 <div className="space-y-4">
                   <div className="flex items-center justify-between">
                     <span className="text-sm">Email Notifications</span>
-                    <input type="checkbox" defaultChecked className="w-4 h-4" />
+                    <input className="h-4 w-4" defaultChecked type="checkbox" />
                   </div>
                   <div className="flex items-center justify-between">
                     <span className="text-sm">Push Notifications</span>
-                    <input type="checkbox" defaultChecked className="w-4 h-4" />
+                    <input className="h-4 w-4" defaultChecked type="checkbox" />
                   </div>
                 </div>
               </div>
             </div>
           </>
         );
-
       default:
         return (
           <>
             <div className="grid auto-rows-min gap-4 md:grid-cols-3">
-              <div className="bg-muted/50 aspect-video rounded-xl" />
-              <div className="bg-muted/50 aspect-video rounded-xl" />
-              <div className="bg-muted/50 aspect-video rounded-xl" />
+              <div className="aspect-video rounded-xl bg-muted/50" />
+              <div className="aspect-video rounded-xl bg-muted/50" />
+              <div className="aspect-video rounded-xl bg-muted/50" />
             </div>
-            <div className="bg-muted/50 min-h-[100vh] flex-1 rounded-xl md:min-h-min" />
+            <div className="min-h-[100vh] flex-1 rounded-xl bg-muted/50 md:min-h-min" />
           </>
         );
     }
-  };
+  }, [currentSection, overviewContent, userProfile]);
+
+  const contentWrapperClassName = useMemo(
+    () =>
+      cn(
+        "flex flex-1 flex-col gap-4 p-4 pt-0 transition-opacity duration-200",
+        {
+          "pointer-events-none opacity-60": isSectionTransitioning,
+          "opacity-80": isRefreshing && !isSectionTransitioning,
+        }
+      ),
+    [isRefreshing, isSectionTransitioning]
+  );
 
   return (
-    <SidebarInset>
+    <SidebarInset aria-busy={isSectionTransitioning || isRefreshing}>
       <header className="flex h-16 shrink-0 items-center gap-2 transition-[width,height] ease-linear group-has-data-[collapsible=icon]/sidebar-wrapper:h-12">
         <div className="flex items-center gap-2 px-4">
           <SidebarTrigger className="-ml-1" />
@@ -290,9 +287,18 @@ export function DashboardContent({
           </Breadcrumb>
         </div>
       </header>
-      <div className="flex flex-1 flex-col gap-4 p-4 pt-0">
-        {renderContent()}
-      </div>
+      {isRefreshing && !isSectionTransitioning && (
+        <div className="px-4" aria-hidden>
+          <div className="h-1 w-full overflow-hidden rounded-full bg-muted">
+            <div className="h-full w-1/2 animate-pulse bg-primary" />
+          </div>
+        </div>
+      )}
+      <div className={contentWrapperClassName}>{sectionContent}</div>
     </SidebarInset>
   );
-}
+};
+
+export const DashboardContent = memo(DashboardContentComponent);
+
+DashboardContent.displayName = "DashboardContent";
