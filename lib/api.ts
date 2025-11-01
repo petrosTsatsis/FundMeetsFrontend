@@ -1,6 +1,4 @@
-import { useAuth } from "@clerk/nextjs";
 import { UUID } from "crypto";
-import { useState, useEffect } from "react";
 
 // Types
 
@@ -1172,43 +1170,3 @@ export class ApiClient {
   }
 }
 
-// Hook to use the API client
-export function useApi() {
-  const { getToken, userId } = useAuth();
-  const [api, setApi] = useState<ApiClient | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
-
-  useEffect(() => {
-    const initializeApi = async () => {
-      const client = new ApiClient();
-      if (getToken && userId) {
-        try {
-          const token = await getToken({ template: "FundMeets" });
-          client.setToken(token);
-          client.setUserId(userId);
-          setApi(client);
-        } catch (error) {
-          console.error("Error getting token:", error);
-        }
-      }
-      setIsLoading(false);
-    };
-
-    initializeApi();
-  }, [getToken, userId]);
-
-  // Update token when it changes
-  useEffect(() => {
-    if (api && getToken) {
-      getToken({ template: "FundMeets" }).then((token) => {
-        api.setToken(token);
-      });
-    }
-  }, [getToken, api]);
-
-  if (isLoading || !api) {
-    return null;
-  }
-
-  return api;
-}

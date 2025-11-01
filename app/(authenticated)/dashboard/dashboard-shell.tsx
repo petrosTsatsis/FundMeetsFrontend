@@ -7,7 +7,8 @@ import { SidebarProvider } from "@/components/ui/sidebar";
 import { AppSidebar } from "@/components/ui/complete-components/sidebar/app-sidebar";
 import { DashboardContent } from "./dashboard-content";
 import { UserProfileProvider } from "@/lib/UserProfileContext";
-import { useApi, UserData } from "@/lib/api";
+import { UserData } from "@/lib/api";
+import { useApi } from "@/lib/use-api";
 
 interface DashboardShellProps {
   userId: string;

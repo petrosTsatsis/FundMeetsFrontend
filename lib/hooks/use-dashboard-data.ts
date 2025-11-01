@@ -1,7 +1,7 @@
 "use client";
 
 import {useQuery} from "@tanstack/react-query";
-import {useApi} from "@/lib/api";
+import {useApi} from "@/lib/use-api";
 
 // Fetch dashboard metrics from the API with cashing and retrying
 export function useDashboardMetrics() {
