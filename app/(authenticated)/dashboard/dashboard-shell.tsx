@@ -12,7 +12,7 @@ import { useApi } from "@/lib/use-api";
 
 interface DashboardShellProps {
   userId: string;
-  initialProfile: UserData;
+  initialProfile: UserData | null;
 }
 
 const userProfileQueryKey = (userId: string) => ["user-profile", userId];
@@ -27,30 +27,35 @@ export function DashboardShell({ userId, initialProfile }: DashboardShellProps) 
   const queryKey = useMemo(() => userProfileQueryKey(userId), [userId]);
 
   useEffect(() => {
-    queryClient.setQueryData(queryKey, initialProfile);
+    if (initialProfile) {
+      queryClient.setQueryData(queryKey, initialProfile);
+    }
   }, [initialProfile, queryClient, queryKey]);
 
   const {
     data: userProfile,
     isFetching,
     error,
-  } = useQuery({
+  } = useQuery<UserData | undefined>({
     queryKey,
     queryFn: () => api!.getUserProfile(userId),
     enabled: Boolean(api),
     staleTime: 60 * 1000,
     gcTime: 5 * 60 * 1000,
-    initialData: initialProfile,
+    initialData: initialProfile ?? undefined,
   });
 
   useEffect(() => {
     if (!error) return;
 
+    const status = (error as { response?: Response })?.response?.status;
     if (process.env.NODE_ENV === "development") {
       console.error("Error fetching user profile:", error);
     }
 
-    router.replace("/");
+    if (status === 401 || status === 403) {
+      router.replace("/");
+    }
   }, [error, router]);
 
   const handleSectionChange = useCallback(
@@ -69,7 +74,11 @@ export function DashboardShell({ userId, initialProfile }: DashboardShellProps) 
   const isStartup = resolvedProfile?.role === "STARTUP";
 
   if (!resolvedProfile) {
-    return null;
+    return (
+      <div className="flex h-screen items-center justify-center text-sm text-muted-foreground">
+        Loading your dashboard…
+      </div>
+    );
   }
 
   return (

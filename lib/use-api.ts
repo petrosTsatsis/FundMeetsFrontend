@@ -15,13 +15,20 @@ export function useApi() {
       const client = new ApiClient();
       if (getToken && userId) {
         try {
-          const token = await getToken({ template: "FundMeets" });
-          client.setToken(token);
-          client.setUserId(userId);
-          setApi(client);
+          let token = await getToken({ template: "FundMeets" });
+
+          if (!token) {
+            token = await getToken();
+          }
+
+          client.setToken(token ?? null);
         } catch (error) {
           console.error("Error getting token:", error);
+          client.setToken(null);
         }
+
+        client.setUserId(userId);
+        setApi(client);
       }
       setIsLoading(false);
     };
@@ -37,13 +44,20 @@ export function useApi() {
     let isMounted = true;
 
     getToken({ template: "FundMeets" })
-      .then((token) => {
+      .then(async (token) => {
+        if (!token) {
+          token = await getToken();
+        }
+
         if (isMounted) {
-          api.setToken(token);
+          api.setToken(token ?? null);
         }
       })
       .catch((error) => {
         console.error("Error refreshing token:", error);
+        if (isMounted) {
+          api.setToken(null);
+        }
       });
 
     return () => {

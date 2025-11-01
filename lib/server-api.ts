@@ -19,7 +19,12 @@ export async function createServerApiClient(): Promise<ServerApiClientResult> {
 
   if (getToken) {
     try {
-      const token = await getToken({ template: "FundMeets" });
+      let token = await getToken({ template: "FundMeets" });
+
+      if (!token) {
+        token = await getToken();
+      }
+
       client.setToken(token ?? null);
     } catch (error) {
       if (process.env.NODE_ENV === "development") {

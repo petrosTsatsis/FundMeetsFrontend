@@ -1,5 +1,4 @@
 import { HydrationBoundary, QueryClient, dehydrate } from "@tanstack/react-query";
-import { redirect } from "next/navigation";
 import { DashboardShell } from "./dashboard-shell";
 import { createServerApiClient } from "@/lib/server-api";
 import type { UserData } from "@/lib/api";
@@ -11,7 +10,7 @@ export default async function DashboardPage() {
   const { api, userId } = await createServerApiClient();
   const queryClient = new QueryClient();
 
-  let userProfile: UserData;
+  let userProfile: UserData | null = null;
 
   try {
     userProfile = await queryClient.fetchQuery<UserData>({
@@ -23,7 +22,7 @@ export default async function DashboardPage() {
     if (process.env.NODE_ENV === "development") {
       console.error("Failed to load dashboard profile", error);
     }
-    redirect("/");
+    queryClient.removeQueries({ queryKey: ["user-profile", userId] });
   }
 
   const dehydratedState = dehydrate(queryClient);
