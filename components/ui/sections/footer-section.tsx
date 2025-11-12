@@ -1,6 +1,7 @@
-'use client';
+"use client";
 
-import React from "react";
+import Image from "next/image";
+import Link from "next/link";
 import { FaGithub, FaDiscord, FaTwitter, FaLinkedin } from "react-icons/fa";
 
 export const FooterSection = () => {
@@ -10,18 +11,21 @@ export const FooterSection = () => {
             <div className="relative mx-auto max-w-screen-xl px-4 py-12 sm:py-16 lg:px-6">
                 <div className="md:flex md:justify-between">
                     <div className="mb-8 md:mb-0">
-                        <a href="/" className="group flex items-center">
+                        <Link href="/" className="group flex items-center">
                             <div className="relative overflow-hidden rounded-lg">
-                                <img
+                                <Image
                                     src="/logo.png"
-                                    className="h-10 w-10 transition-transform duration-500 group-hover:scale-110"
                                     alt="FundMeets Logo"
+                                    width={40}
+                                    height={40}
+                                    className="h-10 w-10 transition-transform duration-500 group-hover:scale-110"
+                                    priority
                                 />
                             </div>
                             <span className="font-display ml-3 bg-gradient-to-r from-primary-700 to-primary-900 bg-clip-text text-2xl font-bold text-transparent">
                                 FundMeets
                             </span>
-                        </a>
+                        </Link>
                         <p className="mt-4 max-w-md text-gray-400">
                             Connecting innovative startups with visionary investors to shape the future of technology.
                         </p>
@@ -33,14 +37,14 @@ export const FooterSection = () => {
                             </h2>
                             <ul className="text-gray-400">
                                 <li className="mb-4">
-                                    <a href="/" className="transition-colors duration-300 hover:text-primary-700">
+                                    <Link href="#about" className="transition-colors duration-300 hover:text-primary-700">
                                         About Us
-                                    </a>
+                                    </Link>
                                 </li>
                                 <li>
-                                    <a href="/" className="transition-colors duration-300 hover:text-primary-700">
+                                    <Link href="#features" className="transition-colors duration-300 hover:text-primary-700">
                                         Blog
-                                    </a>
+                                    </Link>
                                 </li>
                             </ul>
                         </div>
@@ -50,14 +54,14 @@ export const FooterSection = () => {
                             </h2>
                             <ul className="text-gray-400">
                                 <li className="mb-4">
-                                    <a href="/" className="transition-colors duration-300 hover:text-primary-700">
+                                    <Link href="#contact" className="transition-colors duration-300 hover:text-primary-700">
                                         LinkedIn
-                                    </a>
+                                    </Link>
                                 </li>
                                 <li>
-                                    <a href="/" className="transition-colors duration-300 hover:text-primary-700">
+                                    <Link href="#contact" className="transition-colors duration-300 hover:text-primary-700">
                                         Twitter
-                                    </a>
+                                    </Link>
                                 </li>
                             </ul>
                         </div>
@@ -84,24 +88,24 @@ export const FooterSection = () => {
                 <div className="sm:flex sm:items-center sm:justify-between">
                     <span className="text-sm text-gray-400 sm:text-center">
                         © 2025{" "}
-                        <a href="/" className="transition-colors duration-300 hover:text-primary-700">
+                        <Link href="/" className="transition-colors duration-300 hover:text-primary-700">
                             FundMeets™
-                        </a>
+                        </Link>
                         . All Rights Reserved.
                     </span>
                     <div className="mt-4 flex space-x-6 sm:mt-0 sm:justify-center">
-                        <a href="#" className="text-gray-400 transition-colors duration-300 hover:text-primary-700">
+                        <Link href="#contact" className="text-gray-400 transition-colors duration-300 hover:text-primary-700">
                             <FaLinkedin className="h-5 w-5" />
-                        </a>
-                        <a href="#" className="text-gray-400 transition-colors duration-300 hover:text-primary-700">
+                        </Link>
+                        <Link href="#contact" className="text-gray-400 transition-colors duration-300 hover:text-primary-700">
                             <FaTwitter className="h-5 w-5" />
-                        </a>
-                        <a href="#" className="text-gray-400 transition-colors duration-300 hover:text-primary-700">
+                        </Link>
+                        <Link href="#contact" className="text-gray-400 transition-colors duration-300 hover:text-primary-700">
                             <FaGithub className="h-5 w-5" />
-                        </a>
-                        <a href="#" className="text-gray-400 transition-colors duration-300 hover:text-primary-700">
+                        </Link>
+                        <Link href="#contact" className="text-gray-400 transition-colors duration-300 hover:text-primary-700">
                             <FaDiscord className="h-5 w-5" />
-                        </a>
+                        </Link>
                     </div>
                 </div>
             </div>

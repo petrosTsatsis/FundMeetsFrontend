@@ -1,5 +1,6 @@
 "use client";
 
+import Image from "next/image";
 import { useEffect } from "react";
 import { motion } from "framer-motion";
 
@@ -100,10 +101,13 @@ export const HeroSection = () => {
           className="w-full max-w-6xl backdrop-blur-md rounded-2xl shadow-2xl overflow-hidden border border-gray-800 p-6"
         >
           <div className="flex justify-center">
-            <img
+            <Image
               src="/Screenshot.png"
               alt="Dashboard Preview"
-              className="rounded-lg shadow-lg"
+              width={1920}
+              height={1080}
+              className="rounded-lg shadow-lg h-auto w-full"
+              priority
             />
           </div>
         </motion.div>

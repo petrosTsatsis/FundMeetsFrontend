@@ -1,48 +1,48 @@
-import type {Metadata, Viewport} from "next";
-import {ClerkProvider} from "@clerk/nextjs";
-import {DM_Sans} from "next/font/google";
-import {ReactQueryProvider} from "@/lib/react-query-provider";
+import type { Metadata, Viewport } from "next";
+import { ClerkProvider } from "@clerk/nextjs";
+import { DM_Sans } from "next/font/google";
+import { ReactQueryProvider } from "@/lib/react-query-provider";
 import "./globals.css";
 
 const dmSans = DM_Sans({
-    subsets: ["latin"],
-    display: "swap",
+  subsets: ["latin"],
+  display: "swap",
 });
 
 export const metadata: Metadata = {
-    title: "Fund Meets",
-    description: "Fund Meets",
-    icons: {
-        icon: "/logo.png",
-    },
+  title: "Fund Meets",
+  description: "Fund Meets",
+  icons: {
+    icon: "/logo.png",
+  },
 };
 
 export const viewport: Viewport = {
-    width: "device-width",
-    initialScale: 1,
-    themeColor: "#0e7490",
+  width: "device-width",
+  initialScale: 1,
+  themeColor: "#0e7490",
 };
 
 export default function RootLayout({
-                                       children,
-                                   }: Readonly<{
-    children: React.ReactNode;
+  children,
+}: Readonly<{
+  children: React.ReactNode;
 }>) {
-    return (
-        <ClerkProvider>
-            <html lang="en">
-            <head>
-                {/* Preconnect to external domains for faster loading */}
-                <link rel="preconnect" href="https://fonts.googleapis.com"/>
-                <link
-                    rel="preconnect"
-                    href="https://fonts.gstatic.com"
-                    crossOrigin="anonymous"
-                />
-                {/* Service Worker Registration */}
-                <script
-                    dangerouslySetInnerHTML={{
-                        __html: `
+  return (
+    <ClerkProvider>
+      <html lang="en">
+        <head>
+          {/* Preconnect to external domains for faster loading */}
+          <link rel="preconnect" href="https://fonts.googleapis.com" />
+          <link
+            rel="preconnect"
+            href="https://fonts.gstatic.com"
+            crossOrigin="anonymous"
+          />
+          {/* Service Worker Registration */}
+          <script
+            dangerouslySetInnerHTML={{
+              __html: `
                 if ('serviceWorker' in navigator) {
                   window.addEventListener('load', function() {
                     navigator.serviceWorker.register('/sw.js')
@@ -55,15 +55,13 @@ export default function RootLayout({
                   });
                 }
               `,
-                    }}
-                />
-            </head>
-            <body className={`${dmSans.className} antialiased`}>
-            <ReactQueryProvider>
-                {children}
-            </ReactQueryProvider>
-            </body>
-            </html>
-        </ClerkProvider>
-    );
+            }}
+          />
+        </head>
+        <body className={`${dmSans.className} antialiased`}>
+          <ReactQueryProvider>{children}</ReactQueryProvider>
+        </body>
+      </html>
+    </ClerkProvider>
+  );
 }

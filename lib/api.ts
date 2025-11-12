@@ -894,7 +894,7 @@ export class ApiClient {
         const error: any = new Error(errorMessage);
         error.response = { data: errorData };
         throw error;
-      } catch (parseError) {
+      } catch {
         throw new Error(errorMessage);
       }
     }

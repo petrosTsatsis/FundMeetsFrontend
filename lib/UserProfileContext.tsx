@@ -1,7 +1,7 @@
 // components/UserProfileContext.tsx
 "use client";
 
-import React, { createContext, useContext, useState, ReactNode } from "react";
+import { createContext, useContext, useState, type ReactNode } from "react";
 import { UserData } from "@/lib/api";
 
 interface UserProfileContextType {
@@ -12,7 +12,7 @@ interface UserProfileContextType {
 const UserProfileContext = createContext<UserProfileContextType | undefined>(undefined);
 
 interface UserProfileProviderProps {
-    children: React.ReactNode;
+    children: ReactNode;
     initialProfile?: UserData | null;
 }
 
