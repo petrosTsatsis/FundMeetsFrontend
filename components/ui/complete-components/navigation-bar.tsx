@@ -116,10 +116,10 @@ export function NavigationBar() {
             variant="outline"
             className="font-medium text-black hover:text-[var(--primary-900)] transition-colors text-sm"
           >
-            <Link href="/sign-in">Sign In</Link>
+            <Link href="">Sign In</Link>
           </Button>
           <Button asChild variant="default" className="text-sm">
-            <Link href="/sign-up">Get Started</Link>
+            <Link href="">Get Started</Link>
           </Button>
         </div>
       </div>

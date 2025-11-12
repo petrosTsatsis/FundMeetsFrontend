@@ -19,7 +19,7 @@ export default function Home() {
       <div className="h-24">
         <SectionDivider />
       </div>
-      <AboutSection />
+      {/* <AboutSection />
       <div className="h-24">
         <SectionDivider />
       </div>
@@ -34,7 +34,7 @@ export default function Home() {
       <PricingSection />
       <div className="h-24">
         <SectionDivider />
-      </div>
+      </div> */}
       <ContactSection />
       <FooterSection />
     </main>
